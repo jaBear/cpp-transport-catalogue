@@ -16,21 +16,26 @@ void ParseAndPrintStat(const TransportCatalogue& transport_catalogue, std::strin
     id = std::string(request.substr(space_pos + 1));
     
     if (command == "Bus") {
-        std::string_view bus_name;
-        size_t bus_stops;
-        size_t bus_unique_stops;
-        double coordinates;
-        std::tie(bus_name, bus_stops, bus_unique_stops, coordinates) = transport_catalogue.GetRouteInfo(id);
-        if (coordinates == 0.0) {
-            output << "Bus " << bus_name << ": not found" << std::endl;
+        TransportCatalogue::RouteInfo route_info = transport_catalogue.GetRouteInfo(id);
+        if (route_info.coordinates == 0.0) {
+            output << "Bus " << route_info.bus_name << ": not found" << std::endl;
         } else {
-            output << "Bus " << bus_name << ": " << bus_stops << " stops on route, ";
-            output << bus_unique_stops << " unique stops, ";
-            output << std::setprecision(6) << coordinates << " route length" << std::endl;
+            output << "Bus " << route_info.bus_name << ": " << route_info.bus_stops << " stops on route, ";
+            output << route_info.bus_unique_stops << " unique stops, ";
+            output << std::setprecision(6) << route_info.coordinates << " route length" << std::endl;
         }
     } else if (command == "Stop") {
-        std::string result = transport_catalogue.GetStopInfo(id);
-        output << result << std::endl;
+        try {
+            std::string result;
+
+            std::set<std::string_view> buses = transport_catalogue.GetStopInfo(id);
+            for (std::string_view bus : buses) {
+                result += " " + std::string(bus);
+            }
+            output << command << " " << id << ": " << "buses" << result << std::endl;
+        } catch (const std::exception& e) {
+            std::cerr << command << " " << id << ": " << e.what() << std::endl;
+        }
     }
     
 }

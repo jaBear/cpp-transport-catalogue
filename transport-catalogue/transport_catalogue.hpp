@@ -53,104 +53,35 @@ private:
 class TransportCatalogue {
     
 public:
+    struct RouteInfo {
+        std::string_view bus_name;
+        size_t bus_stops;
+        size_t bus_unique_stops;
+        double coordinates;
+    };
     
-    void AddStop(const Stop& stop) {
-        if (stopname_to_stop_.count(stop.name)) {
-            std::cerr << stop.name << " is already added" << std::endl;
-        } else {
-            stops_.push_back(std::move(stop));
-            stopname_to_stop_[stops_.back().name] = &stops_.back();
-        }
-    }
-    void AddRoute(const std::string& name, std::vector<std::string_view> route) {
-        if (busname_to_bus_.count(name)) {
-            std::cerr << name << " is already added" << std::endl;
-        } else {
-            Bus new_bus;
-            new_bus.name = std::move(name);
-            std::string stop_name;
-            for (std::string_view stop_name_from_route : route) {
-                stop_name = std::string(stop_name_from_route);
-                
-                if (!std::count(new_bus.unique_bus_stops.begin(), new_bus.unique_bus_stops.end(), stopname_to_stop_.at(stop_name))) {
-                    new_bus.unique_bus_stops.push_back(stopname_to_stop_.at(stop_name));
-                    stopname_to_bus[stopname_to_stop_.at(stop_name)].push_back(name);
-                }
-                new_bus.bus_stops.push_back(stopname_to_stop_.at(stop_name));
-            }
-            buses_.push_back(std::move(new_bus));
-            busname_to_bus_[buses_.back().name] = &buses_.back();
-            
-        }
-    }
+    void AddStop(const Stop& stop);
+    void AddRoute(const std::string& name, std::vector<std::string_view> route);
     
-    
-    std::tuple<std::string_view, size_t, size_t, double> GetRouteInfo(std::string_view name_of_bus) const {
-        std::string name = std::string(name_of_bus);
-        double distance = 0.0;
-        if (!(busname_to_bus_.count(name))) {
-            return {name_of_bus, 0, 0, 0.0};
-        } else {
-            bool is_first = true;
-            Coordinates coor_buffer;
-            for (Stop* stop : (busname_to_bus_.at(name) -> bus_stops)) {
-                if (is_first) {
-                    coor_buffer = stop->coordinates;
-                    is_first = false;
-                } else {
-                    distance += ComputeDistance(coor_buffer, stop->coordinates);
-                    coor_buffer = stop->coordinates;
-                }
-            }
-        }
-        return {name_of_bus, busname_to_bus_.at(name)->bus_stops.size(), busname_to_bus_.at(name)->unique_bus_stops.size(), distance};
-            
-//            std::cout << name << ": " << busname_to_bus_.at(name)->bus_stops.size() << " stops on route, ";
-//            std::cout << busname_to_bus_.at(name)->unique_bus_stops.size() << " unique stops, ";
-//            std::cout << distance << " route length" << std::endl;
-        
-        // Функция для получения информации о маршруте, должна возвращать сам маршрут
-    }
-    
-    std::string GetStopInfo(std::string_view name_of_stop) const {
-        std::string name = std::string(name_of_stop);
-        std::string result = "Stop " + name;
-        
-        if (!(stopname_to_stop_.count(name))) {
-            result += ": not found";
-            return result;
-        } else if (!(stopname_to_bus.count(stopname_to_stop_.at(name)))) {
-            result += ": no buses";
-            return result;
-        }
-        
-        result += ": buses";
-        std::set<std::string> buses;
-        for (std::string bus : stopname_to_bus.at(stopname_to_stop_.at(name))) {
-            buses.insert(bus);
-        }
-        for (std::string bus : buses) {
-            result += " " + bus;
-        }
-        return result;
-    }
+    RouteInfo GetRouteInfo(std::string_view name_of_bus) const;
+    std::set<std::string_view> GetStopInfo(std::string_view name_of_stop) const;
     
     // Функции для тестов
     // Stops
-    std::string GetLastAddedStopName() {
+    const std::string& GetLastAddedStopName() {
         return stops_.back().name;
     }
-    Stop GetLastAddedStop() {
+    const Stop& GetLastAddedStop() {
         return stops_.back();
     }
     size_t GetSizeOfStops() {
         return stops_.size();
     }
     // Buses
-    std::string GetLastAddedBusName() {
+    const std::string& GetLastAddedBusName() {
         return buses_.back().name;
     }
-    Bus GetLastAddedBus() {
+    const Bus& GetLastAddedBus() {
         return buses_.back();
     }
     size_t GetSizeOfBuses() {
@@ -168,4 +99,6 @@ private:
     std::unordered_map<Stop*, std::vector<std::string>> stopname_to_bus;
 
 };
+
+
 

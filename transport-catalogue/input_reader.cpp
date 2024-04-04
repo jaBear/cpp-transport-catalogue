@@ -104,21 +104,22 @@ void InputReader::ParseLine(std::string_view line) {
 }
 
 void InputReader::ApplyCommands([[maybe_unused]] TransportCatalogue& catalogue) const {
-//    std::sort(commands_.begin(), commands_.end(), [] (const CommandDescription& command, const CommandDescription& command2) {
-//        return command.description == "Stop";
-//    });
-    for (const CommandDescription& command : commands_) {
-        if (command.command == "Stop") {
-            Stop new_stop;
-            new_stop.name = command.id;
-            new_stop.coordinates = ParseCoordinates(command.description);
-            catalogue.AddStop(new_stop);
-        } 
-    }
-    for (const CommandDescription& command : commands_) {
-        if (command.command == "Bus") {
-            catalogue.AddRoute(command.id, ParseRoute(command.description));
+    try {
+        for (const CommandDescription& command : commands_) {
+            if (command.command == "Stop") {
+                Stop new_stop;
+                new_stop.name = command.id;
+                new_stop.coordinates = ParseCoordinates(command.description);
+                catalogue.AddStop(new_stop);
+            }
         }
+        for (const CommandDescription& command : commands_) {
+            if (command.command == "Bus") {
+                catalogue.AddRoute(command.id, ParseRoute(command.description));
+            }
+        }
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << " is already added" << std::endl;
     }
 }
 
