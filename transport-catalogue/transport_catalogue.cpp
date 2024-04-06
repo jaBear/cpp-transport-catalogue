@@ -9,12 +9,13 @@ void TransportCatalogue::AddStop(const Stop& stop) {
     }
 }
 
-void TransportCatalogue::AddRoute(const std::string& name, std::vector<std::string_view> route) {
+void TransportCatalogue::AddRoute(const std::string& name, std::vector<std::string_view> route, bool is_circle) {
     if (busname_to_bus_.count(name)) {
         throw std::invalid_argument(name);
     } else {
         Bus new_bus;
         new_bus.name = std::move(name);
+        new_bus.circle = is_circle;
         std::string stop_name;
         for (std::string_view stop_name_from_route : route) {
             stop_name = std::string(stop_name_from_route);
@@ -31,11 +32,21 @@ void TransportCatalogue::AddRoute(const std::string& name, std::vector<std::stri
     }
 }
 
+void TransportCatalogue::AddDistance(std::string_view main_stop, const std::pair<std::string, std::string>& to_stop) {
+    if (!stopname_to_stop_.count(std::string(main_stop)) && !stopname_to_stop_.count(to_stop.second)) {
+        throw std::invalid_argument("wrong stops");
+    } else {
+        std::pair<Stop*, Stop*> stops(stopname_to_stop_.at(std::string(main_stop)), stopname_to_stop_.at(to_stop.second));
+        distance_between_stops_[std::move(stops)] = std::stod(to_stop.first);
+    }
+}
+
+
 TransportCatalogue::RouteInfo TransportCatalogue::GetRouteInfo(std::string_view name_of_bus) const {
     std::string name = std::string(name_of_bus);
-    double distance = 0.0;
+    double geo_distance = 0.0;
     if (!(busname_to_bus_.count(name))) {
-        return {name_of_bus, 0, 0, 0.0};
+        return {name_of_bus, 0, 0, 0.0, 0.0};
     } else {
         bool is_first = true;
         Coordinates coor_buffer;
@@ -44,12 +55,14 @@ TransportCatalogue::RouteInfo TransportCatalogue::GetRouteInfo(std::string_view 
                 coor_buffer = stop->coordinates;
                 is_first = false;
             } else {
-                distance += ComputeDistance(coor_buffer, stop->coordinates);
+                geo_distance += ComputeDistance(coor_buffer, stop->coordinates);
                 coor_buffer = stop->coordinates;
             }
         }
     }
-    return {name_of_bus, busname_to_bus_.at(name)->bus_stops.size(), busname_to_bus_.at(name)->unique_bus_stops.size(), distance};
+    double distance = GetRouteDistance(busname_to_bus_.at(name));
+    double curvative = (distance)/geo_distance;
+    return {name_of_bus, busname_to_bus_.at(name)->bus_stops.size(), busname_to_bus_.at(name)->unique_bus_stops.size(), distance, curvative};
 }
 
 std::set<std::string_view> TransportCatalogue::GetStopInfo(std::string_view name_of_stop) const {
@@ -65,6 +78,36 @@ std::set<std::string_view> TransportCatalogue::GetStopInfo(std::string_view name
     for (std::string_view bus : stopname_to_bus.at(stopname_to_stop_.at(name))) {
         buses.insert(bus);
     }
-    
+
     return buses;
+}
+
+double TransportCatalogue::GetRouteDistance(Bus* bus) const{
+    double distance = 0.0;
+
+    if (bus->circle && !bus->bus_stops.empty() && bus->bus_stops.size() > 1) {
+        for (int i = 0; (i + 1) < bus->bus_stops.size(); ++i) {
+            if (distance_between_stops_.count(std::pair(bus->bus_stops.at(i), bus->bus_stops.at(i + 1)))) {
+                distance += distance_between_stops_.at(std::pair(bus->bus_stops.at(i), bus->bus_stops.at(i + 1)));;
+            } else if (distance_between_stops_.count(std::pair(bus->bus_stops.at(i + 1), bus->bus_stops.at(i)))) {
+                distance += distance_between_stops_.at(std::pair(bus->bus_stops.at(i + 1), bus->bus_stops.at(i)));
+            }
+        }
+//        for (int i = static_cast<int>(bus->unique_bus_stops.size()); i > 0; --i) {
+//            if (distance_between_stops_.count(std::pair(bus->bus_stops.at(i), bus->bus_stops.at(i - 1)))) {
+//                distance += distance_between_stops_.at(std::pair(bus->bus_stops.at(i), bus->bus_stops.at(i - 1)));
+//            } else if (distance_between_stops_.count(std::pair(bus->bus_stops.at(i - 1), bus->bus_stops.at(i)))) {
+//                distance += distance_between_stops_.at(std::pair(bus->bus_stops.at(i - 1), bus->bus_stops.at(i)));
+//            }
+//        }
+        return distance;
+    }
+    for (int i = 0; (i + 1) < bus->bus_stops.size(); ++i) {
+        if (distance_between_stops_.count(std::pair(bus->bus_stops.at(i), bus->bus_stops.at(i+1)))) {
+            distance += distance_between_stops_.at(std::pair(bus->bus_stops.at(i), bus->bus_stops.at(i+1)));
+        } else if (distance_between_stops_.count(std::pair(bus->bus_stops.at(i + 1), bus->bus_stops.at(i)))){
+            distance += distance_between_stops_.at(std::pair(bus->bus_stops.at(i + 1), bus->bus_stops.at(i)));
+        }
+    }
+    return distance;
 }

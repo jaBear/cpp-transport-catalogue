@@ -27,6 +27,7 @@ struct Bus {
     std::string name;
     std::vector<Stop*> bus_stops;
     std::vector<Stop*> unique_bus_stops;
+    bool circle;
 };
 
 namespace detail {
@@ -47,6 +48,14 @@ struct RoutesHasher {
 private:
     std::hash<int> hasher;
 };
+
+struct DistanceHasher {
+    size_t operator() (const std::pair<Stop*, Stop*>& stops) const {
+        return hasher(stops.first);
+    }
+private:
+    std::hash<const void*> hasher;
+};
 }
  
 
@@ -57,15 +66,18 @@ public:
         std::string_view bus_name;
         size_t bus_stops;
         size_t bus_unique_stops;
-        double coordinates;
+        double distance;
+        double curvative;
     };
     
     void AddStop(const Stop& stop);
-    void AddRoute(const std::string& name, std::vector<std::string_view> route);
+    void AddRoute(const std::string& name, std::vector<std::string_view> route, bool circle);
+    void AddDistance(std::string_view main_stop, const std::pair<std::string, std::string>& stops);
     
     RouteInfo GetRouteInfo(std::string_view name_of_bus) const;
     std::set<std::string_view> GetStopInfo(std::string_view name_of_stop) const;
     
+    double GetRouteDistance(Bus* bus) const;
     // Функции для тестов
     // Stops
     const std::string& GetLastAddedStopName() {
@@ -97,6 +109,8 @@ private:
     std::unordered_map<std::string, Bus*, detail::RoutesHasher> busname_to_bus_;
     
     std::unordered_map<Stop*, std::vector<std::string>> stopname_to_bus;
+    
+    std::unordered_map<std::pair<Stop*, Stop*>, double, detail::DistanceHasher> distance_between_stops_;
 
 };
 

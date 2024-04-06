@@ -17,12 +17,13 @@ void ParseAndPrintStat(const TransportCatalogue& transport_catalogue, std::strin
     
     if (command == "Bus") {
         TransportCatalogue::RouteInfo route_info = transport_catalogue.GetRouteInfo(id);
-        if (route_info.coordinates == 0.0) {
+        if (route_info.distance == 0) {
             output << "Bus " << route_info.bus_name << ": not found" << std::endl;
         } else {
             output << "Bus " << route_info.bus_name << ": " << route_info.bus_stops << " stops on route, ";
             output << route_info.bus_unique_stops << " unique stops, ";
-            output << std::setprecision(6) << route_info.coordinates << " route length" << std::endl;
+            output << route_info.distance << " route length, ";
+            output << route_info.curvative << " curvature" << std::endl;
         }
     } else if (command == "Stop") {
         try {
@@ -34,7 +35,7 @@ void ParseAndPrintStat(const TransportCatalogue& transport_catalogue, std::strin
             }
             output << command << " " << id << ": " << "buses" << result << std::endl;
         } catch (const std::exception& e) {
-            std::cerr << command << " " << id << ": " << e.what() << std::endl;
+            output << command << " " << id << ": " << e.what() << std::endl;
         }
     }
     
