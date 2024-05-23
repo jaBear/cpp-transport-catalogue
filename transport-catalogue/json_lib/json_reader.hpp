@@ -14,7 +14,7 @@ public:
     void Process(std::istream& in_stream, std::ostream& out_stream);
 private:
     TransportCatalogue base_;
-    std::shared_ptr<svg::Document> doc_svg_;
+    svg::Document doc_svg_;
     std::vector<std::string> route_list_;
     
     
@@ -22,15 +22,15 @@ private:
     
     RenderSettings LoadSettings(const json::Node& node);
     RenderSettings AddSettingsToBase(json::Document& document);
-    svg::Document RenderMap(json::Document& document);
-
+    void RenderMap(json::Document& document);
+    
     void AddStop(const json::Dict& object);
     void AddBus(const json::Dict& object);
     void AddDistance(const json::Dict& object);
     void AddBaseRequest(json::Array& array);
     std::vector<std::string> GetRouteList();
 
-    bool ExecuteStatRequestToOut(json::Document& document, std::ostream& out, std::shared_ptr<svg::Document> doc);
+    bool ExecuteStatRequestToOut(json::Document& document, std::ostream& out);
     
     std::optional<int> GetMapRequestID(json::Array& array);
     

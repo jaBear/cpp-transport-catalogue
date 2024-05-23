@@ -63,17 +63,17 @@ void JsonReader::AddBaseRequest(json::Array& array) {
     }
 }
 
-svg::Document JsonReader::RenderMap(json::Document& document) {
-    MapRenderer map_renderer;
+void JsonReader::RenderMap(json::Document& document) {
     RenderSettings settings = AddSettingsToBase(document);
-    return map_renderer.MakeSVGDocument(settings, route_list_, base_);
+    MapRenderer map_renderer(settings, route_list_, base_, doc_svg_);
+    map_renderer.MakeSVGDocument();
 }
 
 json::Dict JsonReader::AddRenderedMap(json::Node& map) {
     json::Dict request_result;
     try {
         std::ostringstream render_result;
-        doc_svg_->Render(render_result);
+        doc_svg_.Render(render_result);
         request_result["map"] = json::Node{render_result.str()};
         request_result["request_id"] = map.AsMap().at("id");
         return request_result;
@@ -157,8 +157,7 @@ bool JsonReader::AddJsonToBase(json::Document& document) {
 }
 
     
-bool JsonReader::ExecuteStatRequestToOut(json::Document& document, std::ostream& out, std::shared_ptr<svg::Document> doc) {
-    doc_svg_ = doc;
+bool JsonReader::ExecuteStatRequestToOut(json::Document& document, std::ostream& out) {
     try {
         const json::Node& node = document.GetRoot();
 
@@ -292,10 +291,9 @@ void JsonReader::Process(std::istream& in_stream, std::ostream& out_stream) {
         std::sort(route_list_.begin(), route_list_.end(), [](const std::string &a, const std::string &b){
                       return std::lexicographical_compare(a.begin(), a.end(),
                                                           b.begin(), b.end());});
-
-    std::shared_ptr<svg::Document> doc_svg = std::make_shared<svg::Document>(RenderMap(document));
     
-    ExecuteStatRequestToOut(document, out_stream, doc_svg);
+    RenderMap(document);
+    ExecuteStatRequestToOut(document, out_stream);
 
     }
 }

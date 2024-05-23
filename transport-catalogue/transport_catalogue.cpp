@@ -10,12 +10,12 @@ void TransportCatalogue::AddStop(const std::string& name, double lat, double lng
     }
 }
 
-void TransportCatalogue::AddDistance(std::string first_stop, std::string second_stop, double distance) {
+void TransportCatalogue::AddDistance(const std::string& first_stop, const std::string& second_stop, double distance) {
     std::pair<Stop*, Stop*> stops(stopname_to_stop_.at(first_stop), stopname_to_stop_.at(second_stop));
     distance_between_stops_[std::move(stops)] = distance;
 }
 
-void TransportCatalogue::AddRoute(const std::string& name, std::vector<std::string_view>& route, bool is_circle) {
+void TransportCatalogue::AddRoute(const std::string& name, const std::vector<std::string_view>& route, bool is_circle) {
     if (busname_to_bus_.count(name)) {
         throw std::invalid_argument(name);
     } else {
@@ -23,7 +23,7 @@ void TransportCatalogue::AddRoute(const std::string& name, std::vector<std::stri
         new_bus.name = name;
         new_bus.circle = is_circle;
         std::string stop_name;
-        for (std::string_view& stop_name_from_route : route) {
+        for (const std::string_view& stop_name_from_route : route) {
             stop_name = std::string(stop_name_from_route);
             
             if (!std::count(new_bus.unique_bus_stops.begin(), new_bus.unique_bus_stops.end(), stopname_to_stop_.at(stop_name))) {

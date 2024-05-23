@@ -18,9 +18,9 @@ public:
         
     void AddStop(const std::string& name, double lat, double lng);
         
-    void AddRoute(const std::string& name, std::vector<std::string_view>& route, bool is_circle);
+    void AddRoute(const std::string& name, const std::vector<std::string_view>& route, bool is_circle);
     
-    void AddDistance(std::string first_stop, std::string second_stop, double distance);
+    void AddDistance(const std::string& first_stop, const std::string& second_stop, double distance);
     
     bool IsStopAdded(std::string& stop_name);
     
