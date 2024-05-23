@@ -400,9 +400,7 @@ void PrintString(std::string words, std::ostream& out) {
 using namespace std::literals;
 
 void Print(const Document& doc, std::ostream& output) {
-    std::visit(NodePrinter{output}, doc.GetRoot().GetValue());
-    
-    // Реализуйте функцию самостоятельно
+    std::visit(NodePrinter{output}, doc.GetRoot().GetValue());    
 }
 
 }  // namespace json

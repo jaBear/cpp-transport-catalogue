@@ -2,13 +2,13 @@
 #include <fstream>
 #include <string>
 
-#include "request_handler.h"
+#include "json_lib/json_reader.hpp"
 
 
 using namespace std;
 
 int main() {
     
-    RequestHandler request_handler;
-    request_handler.LaunchBase(cin, cout);
+    JsonReader reader;
+    reader.LaunchBase(cin, cout);
 }

@@ -19,6 +19,52 @@ void TransportCatalogue::AddDistance(std::string_view main_stop, const std::pair
     }
 }
 
+void TransportCatalogue::AddRoute(const std::string& name, std::vector<std::string>& route, bool is_circle) {
+    if (busname_to_bus_.count(name)) {
+        throw std::invalid_argument(name);
+    } else {
+        Bus new_bus;
+        new_bus.name = name;
+        new_bus.circle = is_circle;
+        std::string stop_name;
+        for (std::string& stop_name_from_route : route) {
+            stop_name = std::string(stop_name_from_route);
+            
+            if (!std::count(new_bus.unique_bus_stops.begin(), new_bus.unique_bus_stops.end(), stopname_to_stop_.at(stop_name))) {
+                new_bus.unique_bus_stops.push_back(stopname_to_stop_.at(stop_name));
+                stopname_to_bus[stopname_to_stop_.at(stop_name)].push_back(name);
+            }
+            new_bus.bus_stops.push_back(stopname_to_stop_.at(stop_name));
+        }
+        buses_.push_back(std::move(new_bus));
+        busname_to_bus_[buses_.back().name] = &buses_.back();
+        
+    }
+}
+
+void TransportCatalogue::AddRoute(const std::string& name, std::vector<std::string_view>& route, bool is_circle) {
+    if (busname_to_bus_.count(name)) {
+        throw std::invalid_argument(name);
+    } else {
+        Bus new_bus;
+        new_bus.name = name;
+        new_bus.circle = is_circle;
+        std::string stop_name;
+        for (std::string_view& stop_name_from_route : route) {
+            stop_name = std::string(stop_name_from_route);
+            
+            if (!std::count(new_bus.unique_bus_stops.begin(), new_bus.unique_bus_stops.end(), stopname_to_stop_.at(stop_name))) {
+                new_bus.unique_bus_stops.push_back(stopname_to_stop_.at(stop_name));
+                stopname_to_bus[stopname_to_stop_.at(stop_name)].push_back(name);
+            }
+            new_bus.bus_stops.push_back(stopname_to_stop_.at(stop_name));
+        }
+        buses_.push_back(std::move(new_bus));
+        busname_to_bus_[buses_.back().name] = &buses_.back();
+        
+    }
+}
+
 RouteInfo TransportCatalogue::GetRouteInfo(std::string_view name_of_bus) const {
     std::string name = std::string(name_of_bus);
     double geo_distance = 0.0;
