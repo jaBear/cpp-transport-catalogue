@@ -104,5 +104,9 @@ struct RenderSettings {
 class MapRenderer {
 public:
     explicit MapRenderer() = default;
-    svg::Document MakeSVGDocument(RenderSettings& settings, std::vector<std::string>& route_list_, std::shared_ptr<TransportCatalogue> base);
+    
+    svg::Document MakeSVGDocument(RenderSettings& settings, std::vector<std::string>& route_list_,  const TransportCatalogue& base);
+    
+private:
+    std::vector<Stop*> GetSortedStops(std::vector<std::string>& route_list_, const TransportCatalogue& base) const;
 };

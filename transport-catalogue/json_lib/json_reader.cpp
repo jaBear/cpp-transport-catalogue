@@ -1,7 +1,7 @@
 #include "json_reader.hpp"
 
-void JsonReader::AddStop(const json::Dict& object) const {
-    base_->AddStop(object.at("name").AsString(), object.at("latitude").AsDouble(), object.at("longitude").AsDouble());
+void JsonReader::AddStop(const json::Dict& object) {
+    base_.AddStop(object.at("name").AsString(), object.at("latitude").AsDouble(), object.at("longitude").AsDouble());
 }
 
 void JsonReader::AddBus(const json::Dict& object) {
@@ -20,7 +20,7 @@ void JsonReader::AddBus(const json::Dict& object) {
             bus_stops.emplace_back(bus_stop);
         }
     }
-    base_->AddRoute(object.at("name").AsString(), bus_stops, object.at("is_roundtrip").AsBool());
+    base_.AddRoute(object.at("name").AsString(), bus_stops, object.at("is_roundtrip").AsBool());
     if (object.at("name").IsString()) {
         route_list_.emplace_back(object.at("name").AsString());
     }
@@ -28,8 +28,14 @@ void JsonReader::AddBus(const json::Dict& object) {
 
 void JsonReader::AddDistance(const json::Dict& object) {
     for (auto& stop_distance : object.at("road_distances").AsMap()) {
-        std::pair<std::string, std::string> stops(std::to_string(stop_distance.second.AsDouble()), stop_distance.first);
-        base_->AddDistance(object.at("name").AsString(), std::move(stops));
+        std::string stop = stop_distance.first;
+        std::string second_stop = object.at("name").AsString();
+
+        double distance = stop_distance.second.AsDouble();
+        if (!base_.IsStopAdded(stop) || !base_.IsStopAdded(second_stop)) {
+            throw std::invalid_argument("wrong stops");
+        }
+        base_.AddDistance(stop, second_stop, distance);
     }
 }
 
@@ -81,7 +87,7 @@ json::Dict JsonReader::AddRenderedMap(json::Node& map) {
 json::Dict JsonReader::AddBusToRequest(json::Node& map) {
     json::Dict request_result;
     try {
-        RouteInfo ri = base_->GetRouteInfo(map.AsMap().at("name").AsString());
+        RouteInfo ri = base_.GetRouteInfo(map.AsMap().at("name").AsString());
         if (ri.bus_stops == 0 && ri.distance == 0.0) {
             request_result["request_id"] = map.AsMap().at("id");
             request_result["error_message"] = json::Node{"not found"};
@@ -103,7 +109,7 @@ json::Dict JsonReader::AddBusToRequest(json::Node& map) {
 json::Dict JsonReader::AddStopToRequest(json::Node& map) {
     json::Dict request_result;
     try {
-        std::set<std::string_view> buses = base_->GetStopInfo(map.AsMap().at("name").AsString());
+        std::set<std::string_view> buses = base_.GetStopInfo(map.AsMap().at("name").AsString());
         json::Array array_of_buses;
         for (std::string_view bus : buses) {
             array_of_buses.push_back(std::string{bus});
@@ -276,8 +282,7 @@ RenderSettings JsonReader::AddSettingsToBase(json::Document& document) {
     return RenderSettings{};
 }
 
-void JsonReader::LaunchBase(std::istream& in_stream, std::ostream& out_stream) {
-    base_ = std::make_shared<TransportCatalogue>();
+void JsonReader::Process(std::istream& in_stream, std::ostream& out_stream) {
     
     json::Document document = json::Load(in_stream);
     

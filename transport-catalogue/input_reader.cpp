@@ -179,7 +179,7 @@ void InputReader::ApplyCommands([[maybe_unused]] TransportCatalogue& catalogue) 
                 ParsedDistances parsed_distance = ParseDistance(command.description);
                 for (std::pair<std::string, std::string> dist_stop : parsed_distance) {
                     std::pair<std::string, std::string> dist_stop2(dist_stop.second, dist_stop.first);
-                    catalogue.AddDistance(command.id, dist_stop2);
+                    catalogue.AddDistance(command.id, dist_stop.first, std::stod(dist_stop.second));
                 }
             }
         }

@@ -10,36 +10,9 @@ void TransportCatalogue::AddStop(const std::string& name, double lat, double lng
     }
 }
 
-void TransportCatalogue::AddDistance(std::string_view main_stop, const std::pair<std::string, std::string>& to_stop) {
-    if (!stopname_to_stop_.count(std::string(main_stop)) && !stopname_to_stop_.count(to_stop.second)) {
-        throw std::invalid_argument("wrong stops");
-    } else {
-        std::pair<Stop*, Stop*> stops(stopname_to_stop_.at(std::string(main_stop)), stopname_to_stop_.at(to_stop.second));
-        distance_between_stops_[std::move(stops)] = std::stod(to_stop.first);
-    }
-}
-
-void TransportCatalogue::AddRoute(const std::string& name, std::vector<std::string>& route, bool is_circle) {
-    if (busname_to_bus_.count(name)) {
-        throw std::invalid_argument(name);
-    } else {
-        Bus new_bus;
-        new_bus.name = name;
-        new_bus.circle = is_circle;
-        std::string stop_name;
-        for (std::string& stop_name_from_route : route) {
-            stop_name = std::string(stop_name_from_route);
-            
-            if (!std::count(new_bus.unique_bus_stops.begin(), new_bus.unique_bus_stops.end(), stopname_to_stop_.at(stop_name))) {
-                new_bus.unique_bus_stops.push_back(stopname_to_stop_.at(stop_name));
-                stopname_to_bus[stopname_to_stop_.at(stop_name)].push_back(name);
-            }
-            new_bus.bus_stops.push_back(stopname_to_stop_.at(stop_name));
-        }
-        buses_.push_back(std::move(new_bus));
-        busname_to_bus_[buses_.back().name] = &buses_.back();
-        
-    }
+void TransportCatalogue::AddDistance(std::string first_stop, std::string second_stop, double distance) {
+    std::pair<Stop*, Stop*> stops(stopname_to_stop_.at(first_stop), stopname_to_stop_.at(second_stop));
+    distance_between_stops_[std::move(stops)] = distance;
 }
 
 void TransportCatalogue::AddRoute(const std::string& name, std::vector<std::string_view>& route, bool is_circle) {
@@ -90,6 +63,11 @@ RouteInfo TransportCatalogue::GetRouteInfo(std::string_view name_of_bus) const {
     return {name_of_bus, busname_to_bus_.at(name)->bus_stops.size(), busname_to_bus_.at(name)->unique_bus_stops.size(), distance, curvative, is_circle};
 }
 
+bool TransportCatalogue::IsStopAdded(std::string& stop_name) {
+    return stopname_to_stop_.count(stop_name);
+}
+
+
 std::set<std::string_view> TransportCatalogue::GetStopInfo(std::string_view name_of_stop) const {
     std::string name = std::string(name_of_stop);
     
@@ -108,7 +86,7 @@ std::set<std::string_view> TransportCatalogue::GetStopInfo(std::string_view name
     return buses;
 }
 
-double TransportCatalogue::GetDistanceBetweenStops(std::pair<Stop*, Stop*> two_stops) const {
+double TransportCatalogue::GetDistanceBetweenStops(std::pair<Stop*, Stop*>& two_stops) const {
     return distance_between_stops_.at(two_stops);
 }
 

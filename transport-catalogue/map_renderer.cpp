@@ -13,7 +13,7 @@ void AddSettingsToText(RenderSettings& settings, svg::shapes::Text& text, std::s
     text.SetFillColor(settings.underlayer_color).SetStrokeColor(settings.underlayer_color).SetStrokeWidth(settings.underlayer_width).SetStrokeLineCap(svg::StrokeLineCap::ROUND).SetStrokeLineJoin(svg::StrokeLineJoin::ROUND).SetPosition(p).SetOffset(settings.bus_label_offset).SetFontSize(settings.bus_label_font_size).SetFontFamily("Verdana").SetFontWeight("bold").SetData(name);
 }
 
-void AddRouteSvgParametrs(std::vector<svg::shapes::Text>& objetcts, const SphereProjector& proj, RenderSettings& settings, svg::Document& new_document, std::vector<std::string>& route_list_, std::shared_ptr<TransportCatalogue> base) {
+void AddRouteSvgParametrs(std::vector<svg::shapes::Text>& objetcts, const SphereProjector& proj, RenderSettings& settings, svg::Document& new_document, std::vector<std::string>& route_list_, const TransportCatalogue& base) {
 
     int count = 0;
     for (std::string route : route_list_) {
@@ -21,7 +21,7 @@ void AddRouteSvgParametrs(std::vector<svg::shapes::Text>& objetcts, const Sphere
             count = 0;
         }
         std::string route_name = route;
-        const Bus* bus = base->GetBusByName(route_name);
+        const Bus* bus = base.GetBusByName(route_name);
     
         svg::shapes::Polyline svg_route;
         auto copy_of_bus_stops = bus->bus_stops;
@@ -75,10 +75,10 @@ void AddRouteSvgParametrs(std::vector<svg::shapes::Text>& objetcts, const Sphere
 }
 }
 
-std::vector<Stop*> GetSortedStops(std::vector<std::string>& route_list_, std::shared_ptr<TransportCatalogue>& base) {
+std::vector<Stop*> MapRenderer::GetSortedStops(std::vector<std::string>& route_list_, const TransportCatalogue& base) const {
     std::vector<Stop*> stops;
     for (std::string route : route_list_) {
-        const Bus* bus = base->GetBusByName(route);
+        const Bus* bus = base.GetBusByName(route);
         for (auto& stop : bus->unique_bus_stops) {
             if (!count(stops.begin(), stops.end(), stop)) {
                 stops.emplace_back(stop);
@@ -97,8 +97,9 @@ void AddObjToDocument(svg::Document& doc, obj& objects) {
         doc.Add(elem);
     }
 }
-
-svg::Document MapRenderer::MakeSVGDocument(RenderSettings& settings, std::vector<std::string>& route_list_, std::shared_ptr<TransportCatalogue> base) {
+//Замечание учел, но route_list_ хочу оставить таким какой он есть. Так как там еще и сортировка маршрутов по заданию должна быть, она у меня в json_reader
+//svg::Document я пытаюсь передавать по ссылке, но он пишет про неявное копирование, из-за того что unique_ptr внутри. 
+svg::Document MapRenderer::MakeSVGDocument(RenderSettings& settings, std::vector<std::string>& route_list_, const TransportCatalogue& base) {
     
     svg::Document document;
     std::vector<svg::shapes::Text> text;

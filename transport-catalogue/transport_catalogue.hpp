@@ -17,44 +17,20 @@ class TransportCatalogue {
 public:
         
     void AddStop(const std::string& name, double lat, double lng);
-    
-    void AddRoute(const std::string& name, std::vector<std::string>& route, bool is_circle);
-    
+        
     void AddRoute(const std::string& name, std::vector<std::string_view>& route, bool is_circle);
     
-    void AddDistance(std::string_view main_stop, const std::pair<std::string, std::string>& to_stop);
+    void AddDistance(std::string first_stop, std::string second_stop, double distance);
+    
+    bool IsStopAdded(std::string& stop_name);
     
     RouteInfo GetRouteInfo(std::string_view name_of_bus) const;
     std::set<std::string_view> GetStopInfo(std::string_view name_of_stop) const;
-    const Bus* GetBusByName(std::string& bus_name) {
+    const Bus* GetBusByName(std::string& bus_name) const {
         return busname_to_bus_.at(bus_name);
     }
     
-    double GetDistanceBetweenStops(std::pair<Stop*, Stop*> two_stops) const;
-    
-    
-    double GetRouteDistance(Bus* bus) const;
-    // Функции для тестов
-    // Stops
-    const std::string& GetLastAddedStopName() {
-        return stops_.back().name;
-    }
-    const Stop& GetLastAddedStop() {
-        return stops_.back();
-    }
-    size_t GetSizeOfStops() {
-        return stops_.size();
-    }
-    // Buses
-    const std::string& GetLastAddedBusName() {
-        return buses_.back().name;
-    }
-    const Bus& GetLastAddedBus() {
-        return buses_.back();
-    }
-    size_t GetSizeOfBuses() {
-        return buses_.size();
-    }
+    double GetDistanceBetweenStops(std::pair<Stop*, Stop*>& two_stops) const;
 
 private:
     std::deque<Stop> stops_;
@@ -67,6 +43,8 @@ private:
     std::unordered_map<Stop*, std::vector<std::string>> stopname_to_bus;
     
     std::unordered_map<std::pair<Stop*, Stop*>, double, detail::DistanceHasher> distance_between_stops_;
+    
+    double GetRouteDistance(Bus* bus) const;
 
 };
 

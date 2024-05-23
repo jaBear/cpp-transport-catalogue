@@ -9,6 +9,13 @@ using namespace std;
 
 int main() {
     
-    JsonReader reader;
-    reader.LaunchBase(cin, cout);
+    ifstream infile;
+    infile.open("/Users/a1/Desktop/C++/firstApp/secpap/teststs/route_info/route_info/primer.json", ios::in);
+    
+    ofstream ofile("/Users/a1/Desktop/C++/firstApp/secpap/teststs/route_info/route_info/output.json");
+    
+    JsonReader request_handler;
+    request_handler.Process(infile, ofile);
+    infile.close();
+
 }
