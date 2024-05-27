@@ -8,14 +8,6 @@
 using namespace std;
 
 int main() {
-    
-    ifstream infile;
-    infile.open("/Users/a1/Desktop/C++/firstApp/secpap/teststs/route_info/route_info/primer.json", ios::in);
-    
-    ofstream ofile("/Users/a1/Desktop/C++/firstApp/secpap/teststs/route_info/route_info/output.json");
-    
     JsonReader request_handler;
-    request_handler.Process(infile, ofile);
-    infile.close();
-
+    request_handler.Process(cin, cout);
 }

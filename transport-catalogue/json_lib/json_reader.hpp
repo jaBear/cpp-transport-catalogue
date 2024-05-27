@@ -6,6 +6,8 @@
 #include "json.hpp"
 #include "transport_catalogue.hpp"
 #include "map_renderer.hpp"
+#include "json_builder.hpp"
+
 
 
 class JsonReader {
@@ -15,6 +17,7 @@ public:
 private:
     TransportCatalogue base_;
     svg::Document doc_svg_;
+    json::Builder builder_;
     std::vector<std::string> route_list_;
     
     
@@ -34,9 +37,9 @@ private:
     
     std::optional<int> GetMapRequestID(json::Array& array);
     
-    json::Dict AddRenderedMap(json::Node& map);
-    json::Dict AddBusToRequest(json::Node& map);
-    json::Dict AddStopToRequest(json::Node& map);
+    void AddRenderedMap(json::Node& map);
+    void AddBusToRequest(json::Node& map);
+    void AddStopToRequest(json::Node& map);
     
     void ExecuteStatRequest(json::Array& node, std::ostream& out_);
     bool AddJsonToBase(json::Document& document);

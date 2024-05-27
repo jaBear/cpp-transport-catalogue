@@ -27,9 +27,10 @@ void JsonReader::AddBus(const json::Dict& object) {
 }
 
 void JsonReader::AddDistance(const json::Dict& object) {
+    std::string stop = object.at("name").AsString();
+    
     for (auto& stop_distance : object.at("road_distances").AsMap()) {
-        std::string stop = stop_distance.first;
-        std::string second_stop = object.at("name").AsString();
+        std::string second_stop = stop_distance.first;
 
         double distance = stop_distance.second.AsDouble();
         if (!base_.IsStopAdded(stop) || !base_.IsStopAdded(second_stop)) {
@@ -69,74 +70,74 @@ void JsonReader::RenderMap(json::Document& document) {
     map_renderer.MakeSVGDocument();
 }
 
-json::Dict JsonReader::AddRenderedMap(json::Node& map) {
-    json::Dict request_result;
+void JsonReader::AddRenderedMap(json::Node& map) {
     try {
         std::ostringstream render_result;
         doc_svg_.Render(render_result);
-        request_result["map"] = json::Node{render_result.str()};
-        request_result["request_id"] = map.AsMap().at("id");
-        return request_result;
+        builder_
+            .Key("map").Value(render_result.str())
+            .Key("request_id").Value(map.AsMap().at("id").AsInt());
     } catch (const std::exception& e) {
-        request_result["request_id"] = map.AsMap().at("id");
-        request_result["error_message"] = json::Node{"not found"};
-        return request_result;
+        builder_
+            .Key("request_id").Value(map.AsMap().at("id").AsInt())
+            .Key("error_message").Value("not found");
     }
 }
 
-json::Dict JsonReader::AddBusToRequest(json::Node& map) {
-    json::Dict request_result;
+void JsonReader::AddBusToRequest(json::Node& map) {
     try {
         RouteInfo ri = base_.GetRouteInfo(map.AsMap().at("name").AsString());
         if (ri.bus_stops == 0 && ri.distance == 0.0) {
-            request_result["request_id"] = map.AsMap().at("id");
-            request_result["error_message"] = json::Node{"not found"};
-            return request_result;
+            builder_
+                .Key("request_id").Value(map.AsMap().at("id").AsInt())
+                .Key("error_message").Value("not found");
         }
-        request_result["curvature"] = json::Node{ri.curvative};
-        request_result["request_id"] = json::Node{map.AsMap().at("id").AsInt()};
-        request_result["route_length"] = json::Node{ri.distance};
-        request_result["stop_count"] = json::Node{static_cast<int>(ri.bus_stops)};
-        request_result["unique_stop_count"] = json::Node{static_cast<int>(ri.bus_unique_stops)};
-        return request_result;
+        builder_
+            .Key("curvature").Value(ri.curvative)
+            .Key("request_id").Value(map.AsMap().at("id").AsInt())
+            .Key("route_length").Value(ri.distance)
+            .Key("stop_count").Value(static_cast<int>(ri.bus_stops))
+            .Key("unique_stop_count").Value(static_cast<int>(ri.bus_unique_stops));
     } catch (const std::exception& e) {
-        request_result["request_id"] = map.AsMap().at("id");
-        request_result["error_message"] = json::Node{"not found"};
-        return request_result;
+        builder_
+            .Key("request_id").Value(map.AsMap().at("id").AsInt())
+            .Key("error_message").Value("not found");
     }
 }
 
-json::Dict JsonReader::AddStopToRequest(json::Node& map) {
-    json::Dict request_result;
+void JsonReader::AddStopToRequest(json::Node& map) {
     try {
         std::set<std::string_view> buses = base_.GetStopInfo(map.AsMap().at("name").AsString());
         json::Array array_of_buses;
         for (std::string_view bus : buses) {
             array_of_buses.push_back(std::string{bus});
         }
-        request_result["buses"] = array_of_buses;
-        request_result["request_id"] = map.AsMap().at("id");
-        return request_result;
+        builder_
+            .Key("buses").Value(array_of_buses)
+            .Key("request_id").Value(map.AsMap().at("id").AsInt());
     } catch (const std::exception& e) {
-        request_result["request_id"] = map.AsMap().at("id");
-        request_result["error_message"] = json::Node{"not found"};
-        return request_result;
+        builder_
+            .Key("request_id").Value(map.AsMap().at("id").AsInt())
+            .Key("error_message").Value("not found");
     }
 }
 
 
 
 void JsonReader::ExecuteStatRequest(json::Array& array, std::ostream& out_) {
-    json::Array result;
+    builder_.StartArray();
     for (auto& value : array) {
+        builder_.StartDict();
         if (value.AsMap().at("type").AsString() == "Map")
-            result.push_back(AddRenderedMap(value));
+            AddRenderedMap(value);
         if (value.AsMap().at("type").AsString() == "Bus")
-            result.push_back(AddBusToRequest(value));
+            AddBusToRequest(value);
         if (value.AsMap().at("type").AsString() == "Stop")
-            result.push_back(AddStopToRequest(value));
+            AddStopToRequest(value);
+        builder_.EndDict();
     }
-    json::Document doc{result};
+    builder_.EndArray();
+    json::Document doc{builder_.Build()};
     json::Print(doc, out_);
 }
 

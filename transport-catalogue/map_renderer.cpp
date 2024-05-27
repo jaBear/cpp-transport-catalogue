@@ -33,6 +33,11 @@ void MapRenderer::AddRouteSvgParametrs(std::vector<svg::shapes::Text>& objetcts,
                 svg::Color new_color{settings_.color_palette.at(count)};
                 svg_route.AddPoint(proj(stop->coordinates)).SetFillColor({"none"}).SetStrokeColor(new_color).SetStrokeWidth(settings_.line_width).SetStrokeLineCap(svg::StrokeLineCap::ROUND).SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
             }
+        } else {
+            for (auto& stop : bus->bus_stops) {
+                svg::Color new_color{settings_.color_palette.at(count)};
+                svg_route.AddPoint(proj(stop->coordinates)).SetFillColor({"none"}).SetStrokeColor(new_color).SetStrokeWidth(settings_.line_width).SetStrokeLineCap(svg::StrokeLineCap::ROUND).SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
+            }
         }
         if (!bus->bus_stops.empty()) {
             svg::shapes::Text svg_text;
@@ -41,12 +46,13 @@ void MapRenderer::AddRouteSvgParametrs(std::vector<svg::shapes::Text>& objetcts,
             svg::shapes::Text svg_text4;
             svg::Point p = proj(bus->bus_stops.front()->coordinates);
             AddSettingsToText(svg_text, bus->name, p);
-        if (bus->circle) {
-            svg::Color new_color{settings_.color_palette.at(count)};
-            svg_text2.SetFillColor(new_color).SetPosition(proj(bus->bus_stops.front()->coordinates)).SetOffset(settings_.bus_label_offset).SetFontSize(settings_.bus_label_font_size).SetFontFamily("Verdana").SetFontWeight("bold").SetData(bus->name);
-            objetcts.push_back(svg_text);
-            objetcts.push_back(svg_text2);
-        }
+            
+            if (bus->circle) {
+                svg::Color new_color{settings_.color_palette.at(count)};
+                svg_text2.SetFillColor(new_color).SetPosition(proj(bus->bus_stops.front()->coordinates)).SetOffset(settings_.bus_label_offset).SetFontSize(settings_.bus_label_font_size).SetFontFamily("Verdana").SetFontWeight("bold").SetData(bus->name);
+                objetcts.push_back(svg_text);
+                objetcts.push_back(svg_text2);
+            }
         else {
             svg::Color new_color{settings_.color_palette.at(count)};
             int last_bus_place = (static_cast<int>(bus->bus_stops.size()) / 2);
@@ -55,7 +61,7 @@ void MapRenderer::AddRouteSvgParametrs(std::vector<svg::shapes::Text>& objetcts,
                     svg_text2.SetFillColor(new_color).SetPosition(proj(bus->bus_stops.front()->coordinates)).SetOffset(settings_.bus_label_offset).SetFontSize(settings_.bus_label_font_size).SetFontFamily("Verdana").SetFontWeight("bold").SetData(bus->name);
                     objetcts.push_back(svg_text);
                     objetcts.push_back(svg_text2);
-                }
+                } else {
                 svg_text2.SetFillColor(new_color).SetPosition(proj(bus->bus_stops.front()->coordinates)).SetOffset(settings_.bus_label_offset).SetFontSize(settings_.bus_label_font_size).SetFontFamily("Verdana").SetFontWeight("bold").SetData(bus->name);
                 
                 svg::Point p2 = proj(bus->bus_stops.at(last_bus_place)->coordinates);
@@ -67,6 +73,7 @@ void MapRenderer::AddRouteSvgParametrs(std::vector<svg::shapes::Text>& objetcts,
                 objetcts.push_back(svg_text2);
                 objetcts.push_back(svg_text3);
                 objetcts.push_back(svg_text4);
+                }
             }
         }
     count++;
