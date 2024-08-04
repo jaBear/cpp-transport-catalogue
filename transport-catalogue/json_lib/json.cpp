@@ -1,4 +1,4 @@
-#include "json.hpp"
+#include "json.h"
 
 using namespace std;
 
@@ -239,6 +239,11 @@ Node LoadNode(istream& input) {
 const Node::Value& Node::GetValue() const {
     return *this;
 }
+
+Node::Value& Node::GetValue() {
+    return *this;
+}
+
 const std::string Node::GetNodeObj() const {
     std::string result;
     std::visit(Node::NodeChecker{result}, GetValue());
@@ -300,7 +305,21 @@ const Array& Node::AsArray() const {
     return get<Array>(*this);
 }
 
+Array& Node::AsArray() {
+    if (!IsArray()) {
+        throw std::logic_error("Value not array");
+    }
+    return get<Array>(*this);
+}
+
 const Dict& Node::AsMap() const {
+    if (!IsMap()) {
+        throw std::logic_error("Value not map");
+    }
+    return get<Dict>(*this);
+}
+
+Dict& Node::AsMap() {
     if (!IsMap()) {
         throw std::logic_error("Value not map");
     }
@@ -400,7 +419,7 @@ void PrintString(std::string words, std::ostream& out) {
 using namespace std::literals;
 
 void Print(const Document& doc, std::ostream& output) {
-    std::visit(NodePrinter{output}, doc.GetRoot().GetValue());    
+    std::visit(NodePrinter{output}, doc.GetRoot().GetValue());
 }
 
 }  // namespace json

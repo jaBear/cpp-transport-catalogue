@@ -1,5 +1,7 @@
 #pragma once
 
+
+
 #include <iostream>
 #include <optional>
 #include <map>
@@ -19,6 +21,8 @@ class Node final : private std::variant<std::nullptr_t, Array, Dict, bool, int, 
 public:
     using variant::variant;
     using Value = std::variant<std::nullptr_t, Array, Dict, bool, int, double, std::string>;
+    
+//    friend class json::Builder;
     //Visitor для проверки типа значения
     struct NodeChecker {
         std::string& result;
@@ -42,6 +46,8 @@ public:
     }
 
     const Value& GetValue() const;
+    Value& GetValue();
+
     const std::string GetNodeObj() const;
     
     //Методы Node для проверки типа значения внутри val_
@@ -55,7 +61,9 @@ public:
     bool IsMap() const;
     
     const Array& AsArray() const;
+    Array& AsArray();
     const Dict& AsMap() const;
+    Dict& AsMap();
     int AsInt() const;
     double AsDouble() const;
     bool AsBool() const;

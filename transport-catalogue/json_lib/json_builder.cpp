@@ -1,4 +1,4 @@
-#include "json_builder.hpp"
+#include "json_builder.h"
  
 namespace json {
 
@@ -89,11 +89,13 @@ void Builder::AddNode(Node node) {
         }
  
         if (nodes_stack_.back()->IsArray()) {
-            Array arr = nodes_stack_.back()->AsArray();
-            arr.emplace_back(node);
- 
-            nodes_stack_.pop_back();
-            nodes_stack_.emplace_back(std::move(std::make_unique<Node>(arr)));
+            std::visit([this](auto&& arg){std::get<Array>(this->nodes_stack_.back()->GetValue()).emplace_back(arg);}, node.GetValue());
+//            Array arr = nodes_stack_.back()->AsArray();
+//            arr.emplace_back(node);
+//            std::unique_ptr<Node> node = std::make_unique<Node>(arr);
+//
+//            nodes_stack_.pop_back();
+//            nodes_stack_.push_back(std::move(node));
  
             return;
         }
@@ -103,11 +105,13 @@ void Builder::AddNode(Node node) {
             nodes_stack_.pop_back();
  
             if (nodes_stack_.back()->IsMap()) {
-                Dict dictionary = nodes_stack_.back()->AsMap();
-                dictionary.emplace(std::move(str), node);
- 
-                nodes_stack_.pop_back();
-                nodes_stack_.emplace_back(std::move(std::make_unique<Node>(dictionary)));
+                std::visit([this, str](auto&& arg){std::get<Dict>(this->nodes_stack_.back()->GetValue())[str] = arg;}, node.GetValue());
+//                Dict dictionary = nodes_stack_.back()->AsMap();
+//                dictionary.emplace(std::move(str), node);
+//
+//                nodes_stack_.pop_back();
+//                nodes_stack_.emplace_back(std::move(std::make_unique<Node>(dictionary)));
+//                std::visit([this](auto&& arg){std::get<Array>(this->nodes_stack_.back()->GetValue()).emplace_back(arg);}, node.GetValue());
             }
  
             return;
@@ -133,7 +137,7 @@ Builder& Builder::Value(Node::Value value_) {
 }
  
 DictionaryContext Builder::StartDict() {
-    nodes_stack_.emplace_back(std::move(std::make_unique<Node>(Dict())));
+    nodes_stack_.emplace_back(std::make_unique<Node>(Dict()));
     return DictionaryContext(*this);
 }
  

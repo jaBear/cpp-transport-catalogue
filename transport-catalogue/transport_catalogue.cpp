@@ -1,7 +1,7 @@
-#include "transport_catalogue.hpp"
+#include "transport_catalogue.h"
 
 void TransportCatalogue::AddStop(const std::string& name, double lat, double lng) {
-    Stop stop{name, lat, lng};
+    Stop stop{stops_.size(), name, lat, lng};
     if (stopname_to_stop_.count(stop.name)) {
         throw std::invalid_argument(stop.name);
     } else {
@@ -87,8 +87,23 @@ std::set<std::string_view> TransportCatalogue::GetStopInfo(std::string_view name
 }
 
 double TransportCatalogue::GetDistanceBetweenStops(std::pair<Stop*, Stop*>& two_stops) const {
-    return distance_between_stops_.at(two_stops);
+    if (distance_between_stops_.count(two_stops)) {
+        return distance_between_stops_.at(two_stops);
+    }
+    else
+        return distance_between_stops_.at(std::pair<Stop*, Stop*>{two_stops.second, two_stops.first});
+
 }
+
+std::deque<Stop> TransportCatalogue::GetAllStops() const {
+    return stops_;
+}
+
+std::unordered_map<std::string, Stop*, detail::StopnameHasher> TransportCatalogue::GetAllStopsMap() const {
+    return stopname_to_stop_;
+}
+
+
 
 double TransportCatalogue::GetRouteDistance(Bus* bus) const{
     double distance = 0.0;
