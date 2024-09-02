@@ -5,18 +5,19 @@
 #include <memory>
 #include <map>
 
-#include "router.h"
-#include "graph.h"
+#include "../router.h"
+#include "../graph.h"
 #include "json.h"
-#include "transport_router.h"
-#include "transport_catalogue.h"
-#include "map_renderer.h"
+#include "../transport_router.h"
+#include "../transport_catalogue.h"
+#include "../map_renderer.h"
 #include "json_builder.h"
 
 class JsonReader {
 public:
     JsonReader() = default;
     void Process(std::istream& in_stream, std::ostream& out_stream);
+    ~JsonReader() = default;
 private:
     TransportCatalogue base_;
     svg::Document doc_svg_;

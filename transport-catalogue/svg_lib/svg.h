@@ -223,7 +223,7 @@ public:
     void Add(Obj obj) {
         AddPtr(std::move(std::make_unique<Obj>(obj)));
     }
-    virtual ~ObjectContainer() = default;
+    virtual ~ObjectContainer() {};
 
     virtual void AddPtr(std::unique_ptr<Object>&& obj) = 0;
 protected:
@@ -249,12 +249,7 @@ protected:
 
 class Document : public ObjectContainer {
 public:
-    
-    template <typename Obj>
-    void Add(Obj obj) {
-        objects_.emplace_back(std::make_unique<Obj>(std::move(obj)));
-    }
-    
+
     void AddPtr(std::unique_ptr<Object>&& obj) override;
 
     // Выводит в ostream svg-представление документа

@@ -4,8 +4,8 @@
 #include <variant>
 
 #include "geo.h"
-#include "svg.h"
-#include "json.h"
+#include "svg_lib/svg.h"
+#include "json_lib/json.h"
 #include "transport_catalogue.h"
 
 /*
@@ -87,6 +87,8 @@ private:
 
 
 struct RenderSettings {
+    RenderSettings() = default;
+    RenderSettings(double width, double height, double padding, double line_width, double stop_radius, int bus_label_font_size, svg::Point bus_label_offset, int stop_label_font_size, svg::Point stop_label_offset, double underlayer_width) : width(width), height(height), padding(padding), line_width(line_width), stop_radius(stop_radius), bus_label_font_size(bus_label_font_size), bus_label_offset(bus_label_offset), stop_label_font_size(stop_label_font_size), stop_label_offset(stop_label_offset), underlayer_width(underlayer_width){};
     double width;
     double height;
     double padding;

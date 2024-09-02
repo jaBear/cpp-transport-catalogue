@@ -76,7 +76,7 @@ void JsonReader::AddBaseRequest(json::Array& array) {
             AddStop(object);
         }
     }
-    router_ = new TransportRouter{base_.GetAllStops().size() * 2, route_settings_, base_};
+    router_ = new TransportRouter{route_settings_, base_};
     router_->InitiaizeGraph(base_.GetAllStops().size(), base_.GetAllStops());
     
     for (const auto& value : array) {

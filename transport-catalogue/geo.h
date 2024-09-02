@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cmath>
-#include "svg.h"
+#include "svg_lib/svg.h"
 
 const int EARTH_RADIUS = 6371000;
 

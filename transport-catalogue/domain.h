@@ -69,9 +69,16 @@ private:
 
 struct DistanceHasher {
     size_t operator() (const std::pair<Stop*, Stop*>& stops) const {
-        return hasher(stops.first);
+        return std::hash<void*>{}(stops.first) + 57 * std::hash<void*>{}(stops.second);
+    }
+};
+    
+struct EdgeHasher {
+    size_t operator() (size_t edge) const {
+        return hasher(static_cast<int>(edge + 57));
     }
 private:
-    std::hash<const void*> hasher;
+    std::hash<int> hasher;
+
 };
 }
