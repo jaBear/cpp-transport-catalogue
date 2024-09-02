@@ -34,17 +34,17 @@ void JsonReader::AddBus(const json::Dict& object) {
             route_list_.emplace_back(bus_name);
         }
 
-        size_t all_stops_size = base_.GetAllStops().size();
-        if (stops.size() > 1) {
-            int span_count = 0;
-            for (int i = 0; i < stops.size() - 1; ++i) {
-                for (int x = i + 1; x < stops.size(); ++x) {
-                    if (stops.at(i) != stops.at(x)) {
-                        router_->AddEdge(stops.at(i)->edge_id + all_stops_size, stops.at(x)->edge_id, i, x, stops, bus_name, ++span_count);
-                    }
-                }
-            }
-        }
+//        size_t all_stops_size = base_.GetAllStops().size();
+//        if (stops.size() > 1) {
+//            int span_count = 0;
+//            for (int i = 0; i < stops.size() - 1; ++i) {
+//                for (int x = i + 1; x < stops.size(); ++x) {
+//                    if (stops.at(i) != stops.at(x)) {
+//                        router_->AddEdge(stops.at(i)->edge_id + all_stops_size, stops.at(x)->edge_id, i, x, stops, bus_name, ++span_count);
+//                    }
+//                }
+//            }
+//        }
         
     }
     
@@ -76,8 +76,6 @@ void JsonReader::AddBaseRequest(json::Array& array) {
             AddStop(object);
         }
     }
-    router_ = new TransportRouter{route_settings_, base_};
-    router_->InitiaizeGraph(base_.GetAllStops().size(), base_.GetAllStops());
     
     for (const auto& value : array) {
         const json::Dict& object = value.AsMap();
@@ -92,7 +90,8 @@ void JsonReader::AddBaseRequest(json::Array& array) {
             AddBus(object);
         }
     }
-    router_->AddRouteList(route_list_);
+    router_ = new TransportRouter{route_settings_, base_, route_list_};
+
 }
 
 void JsonReader::RenderMap(json::Document& document) {
@@ -139,18 +138,17 @@ void JsonReader::AddBusToRequest(json::Node& map) {
     }
 }
 
-void JsonReader::AddRouteToRequest(json::Node& map, Router<double>& router) {
+void JsonReader::AddRouteToRequest(json::Node& map) {
     std::deque<Stop> stops = base_.GetAllStops();
     try {
         std::string stop_name_from = map.AsMap().at("from").AsString();
         std::string stop_name_to = map.AsMap().at("to").AsString();
 
-        Stop stop_from = *base_.GetStopByName(stop_name_from);
-        Stop stop_to = *base_.GetStopByName(stop_name_to);
+        Stop* stop_from = base_.GetStopByName(stop_name_from);
+        Stop* stop_to = base_.GetStopByName(stop_name_to);
         
-        graph_ = router_->GetGraphPTR();
-        auto route_info = router.BuildRoute(stop_from.edge_id, stop_to.edge_id);
-        
+        auto route_info = router_->GetRouteInfo(stop_from, stop_to);
+
         if (route_info.has_value()) {
             builder_
                 .Key("items")
@@ -159,7 +157,7 @@ void JsonReader::AddRouteToRequest(json::Node& map, Router<double>& router) {
             const auto& elem = route_info->edges;
             int count = 0;
             for (auto& edge_id : elem) {
-                auto value = graph_->GetEdge(edge_id);
+                auto value = router_->GetEdgeInfo(edge_id);
                 if (count % 2 == 0) {
                 std::optional<Stop*> stop_iter = base_.GetStopByEdge(edge_id);
                     std::string stop_name = stop_iter.value()->name;
@@ -232,7 +230,7 @@ void JsonReader::AddStopToRequest(json::Node& map) {
 
 void JsonReader::ExecuteStatRequest(json::Array& array, std::ostream& out_) {
     builder_.StartArray();
-    Router router{*router_->GetGraphPTR()};
+//    Router router{*router_->GetGraphPTR()};
 
     for (auto& value : array) {
         builder_.StartDict();
@@ -243,7 +241,7 @@ void JsonReader::ExecuteStatRequest(json::Array& array, std::ostream& out_) {
         if (value.AsMap().at("type").AsString() == "Stop")
             AddStopToRequest(value);
         if (value.AsMap().at("type").AsString() == "Route")
-            AddRouteToRequest(value, router);
+            AddRouteToRequest(value);
         builder_.EndDict();
     }
     builder_.EndArray();

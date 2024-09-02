@@ -1,24 +1,27 @@
 #pragma once
 
 #include "domain.h"
-#include "transport_catalogue.h"
 #include "graph.h"
+#include "router.h"
+#include "transport_catalogue.h"
 #include "json_lib/json_builder.h"
 
-//Метод поиска пути в самом низу FindDistance в приватной части
 
 using namespace graph;
 
 const double meters_in_one_km = 1000.0;
 const double minutes_in_hour = 60.0;
 
-
-class TransportRouter {
+class InitializedGraph {
 public:
-    explicit TransportRouter(RouteSettings& route_settings, TransportCatalogue& base) : graph_{new DirectedWeightedGraph<double>{base.GetAllStops().size() * 2}}, route_settings_(route_settings), base_(base){}
     
-    friend class JsonReader;
+    explicit InitializedGraph(RouteSettings& route_settings, TransportCatalogue& base, std::vector<std::string> route_list) : graph_{new DirectedWeightedGraph<double>{base.GetAllStops().size() * 2}}, route_settings_(route_settings), base_(base), route_list_(route_list){
+        InitiaizeGraph();
+    }
     
+    DirectedWeightedGraph<double>* GetGraphPTR() const{
+        return graph_;
+    }
 private:
     DirectedWeightedGraph<double>* graph_ = nullptr;
     RouteSettings& route_settings_;
@@ -31,14 +34,32 @@ private:
         route_list_ = route_list;
     }
     
-    DirectedWeightedGraph<double>* GetGraphPTR() const{
-        return graph_;
-    }
     
-    void InitiaizeGraph(size_t size_of_stops, const std::deque<Stop>& stops);
+    void InitiaizeGraph();
 
-    
     double FindTime(double distance, double velocity) const;
     double FindDistance(int from, int to, const std::vector<Stop*>& stops) const;
     
 };
+
+
+class TransportRouter {
+public:
+    explicit TransportRouter(RouteSettings& route_settings, TransportCatalogue& base, std::vector<std::string> route_list) : graph_{route_settings, base, route_list} {
+        router_ = new Router<double>(*graph_.GetGraphPTR());
+    }
+    
+    auto GetRouteInfo(const Stop* stop_from, const Stop* stop_to) const {
+        return router_->BuildRoute(stop_from->edge_id, stop_to->edge_id);
+    }
+    
+    const Edge<double>& GetEdgeInfo(EdgeId edge_id) {
+        return graph_.GetGraphPTR()->GetEdge(edge_id);
+    }
+//
+private:
+    
+    Router<double>* router_ = nullptr;
+    InitializedGraph graph_;
+};
+

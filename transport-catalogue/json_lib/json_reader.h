@@ -55,7 +55,7 @@ private:
     void AddRenderedMap(json::Node& map);
     void AddBusToRequest(json::Node& map);
     void AddStopToRequest(json::Node& map);
-    void AddRouteToRequest(json::Node& map, Router<double>& router);
+    void AddRouteToRequest(json::Node& map);
     
     void ExecuteStatRequest(json::Array& array, std::ostream& out_);
     bool AddJsonToBase(json::Document& document);

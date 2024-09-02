@@ -10,7 +10,7 @@ using namespace std;
 
 int main() {
 //    LOG_DURATION("test");
-    ifstream in("/Users/a1/Downloads/s12_final_opentest/s12_final_opentest_3.json");
+    ifstream in("/Users/a1/Desktop/test_3_out.txt");
     ofstream out("/Users/a1/Desktop/test.out");
 //    ofstream out("/Users/a1/Desktop/srttest/out.txt");
     JsonReader request_handler;
