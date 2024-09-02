@@ -12,10 +12,9 @@ double TransportRouter::FindDistance(int from, int to, const std::vector<Stop*>&
 }
 
 double TransportRouter::FindTime(double distance, double velocity) const {
-        double distance_between_two_stops_in_km = distance / 1000.0;
+        double distance_between_two_stops_in_km = distance / meters_in_one_km;
         double time_in_hour = distance_between_two_stops_in_km / velocity;
-        double min_in_hour = 60.0;
-        return time_in_hour *= min_in_hour;
+        return time_in_hour *= minutes_in_hour;
 }
 
 
