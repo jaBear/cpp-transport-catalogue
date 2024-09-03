@@ -147,19 +147,17 @@ void JsonReader::AddRouteToRequest(json::Node& map) {
         Stop* stop_from = base_.GetStopByName(stop_name_from);
         Stop* stop_to = base_.GetStopByName(stop_name_to);
         
-        auto route_info = router_->GetRouteInfo(stop_from, stop_to);
+        std::pair<std::vector<Edge<double>>, double> route_info = router_->GetEdges(stop_from, stop_to);
 
-        if (route_info.has_value()) {
+        if (!route_info.first.empty()) {
             builder_
                 .Key("items")
                 .StartArray();
             
-            const auto& elem = route_info->edges;
             int count = 0;
-            for (auto& edge_id : elem) {
-                auto value = router_->GetEdgeInfo(edge_id);
+            for (auto& edge : route_info.first) {
                 if (count % 2 == 0) {
-                std::optional<Stop*> stop_iter = base_.GetStopByEdge(edge_id);
+                std::optional<Stop*> stop_iter = base_.GetStopByEdge(edge.from);
                     std::string stop_name = stop_iter.value()->name;
                     builder_
                         .StartDict()
@@ -174,11 +172,11 @@ void JsonReader::AddRouteToRequest(json::Node& map) {
                         builder_
                             .StartDict()
                             .Key("bus")
-                            .Value(value.bus)
+                            .Value(edge.bus)
                             .Key("span_count")
-                            .Value(value.span_count)
+                            .Value(edge.span_count)
                             .Key("time")
-                            .Value(value.weight)
+                            .Value(edge.weight)
                             .Key("type")
                             .Value("Bus")
                             .EndDict();
@@ -191,7 +189,7 @@ void JsonReader::AddRouteToRequest(json::Node& map) {
                 builder_
                 .EndArray()
                 .Key("request_id").Value(map.AsMap().at("id").AsInt())
-                .Key("total_time").Value(route_info->weight);
+                .Key("total_time").Value(route_info.second);
             
         } else {
             builder_

@@ -42,22 +42,29 @@ private:
     
 };
 
-
 class TransportRouter {
 public:
     explicit TransportRouter(RouteSettings& route_settings, TransportCatalogue& base, std::vector<std::string> route_list) : graph_{route_settings, base, route_list} {
         router_ = new Router<double>(*graph_.GetGraphPTR());
     }
-    
-    auto GetRouteInfo(const Stop* stop_from, const Stop* stop_to) const {
-        return router_->BuildRoute(stop_from->edge_id, stop_to->edge_id);
+        
+    std::pair<std::vector<Edge<double>>, double> GetEdges(const Stop* stop_from, const Stop* stop_to) {
+        auto route_info = router_->BuildRoute(stop_from->edge_id, stop_to->edge_id);
+        auto edges = route_info->edges;
+        std::vector<Edge<double>> result;
+        
+        for (auto edge : edges) {
+            result.push_back(GetEdgeInfo(edge));
+        }
+        return std::pair{result, route_info->weight};
     }
     
-    const Edge<double>& GetEdgeInfo(EdgeId edge_id) {
-        return graph_.GetGraphPTR()->GetEdge(edge_id);
-    }
 //
 private:
+    
+    Edge<double> GetEdgeInfo(EdgeId edge_id) {
+        return graph_.GetGraphPTR()->GetEdge(edge_id);
+    }
     
     Router<double>* router_ = nullptr;
     InitializedGraph graph_;
